@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenIA Studio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0A0F;--surface:#16161F;--surface2:#1E1E2E;--border:#2A2A3E;
+  --accent:#6C5CE7;--accent-dim:#2D1F6E;--accent-light:#A29BFE;
+  --text:#E8E8F0;--muted:#636380;--success:#00B894;
+  --err:#FF7675;--err-bg:#2D1A1A;--err-border:#5C2A2A;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;max-width:480px;margin:0 auto;padding-bottom:50px;min-height:100vh}
+header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent)}
+.logo{font-size:19px;font-weight:700;letter-spacing:-.4px}
+.badge{margin-left:auto;font-size:10px;color:var(--muted);background:var(--surface);padding:3px 8px;border-radius:99px;border:1px solid var(--border)}
+.api-bar{margin:14px 20px 0;padding:11px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;display:flex;align-items:center;gap:8px}
+#api-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:all .3s}
+#api-dot.on{background:var(--success);box-shadow:0 0 7px var(--success)}
+#api-input{flex:1;background:transparent;border:none;outline:none;color:var(--accent-light);font-size:12px;font-family:monospace}
+.api-toggle{background:none;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:0}
+.notice{margin:10px 20px 0;padding:10px 14px;background:#1A1A0F;border:1px solid #3A3A1A;border-radius:10px;font-size:12px;color:#A8A870;line-height:1.7}
+.notice a{color:#D4D490;text-decoration:none;font-weight:600}
+.tabs{display:flex;margin:14px 20px 0;background:var(--surface);border-radius:10px;padding:4px;gap:4px}
+.tab{flex:1;padding:9px 0;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:var(--muted);transition:all .18s}
+.tab.active{background:var(--accent);color:#fff}
+.body{padding:14px 20px;display:flex;flex-direction:column;gap:14px}
+.panel{display:none;flex-direction:column;gap:14px}
+.panel.active{display:flex}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px}
+select,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:11px 14px;font-size:14px;outline:none;font-family:inherit;transition:border-color .15s}
+select{appearance:none;cursor:pointer}
+textarea{font-family:monospace;font-size:13px;line-height:1.6;resize:vertical}
+select:focus,textarea:focus{border-color:var(--accent)}
+.row{display:flex;gap:10px}
+.half{flex:1}
+.dur-row{display:flex;gap:8px}
+.dur-btn{flex:1;padding:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer;font-size:14px;font-weight:600;transition:all .15s}
+.dur-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent-light)}
+.gen-btn{width:100%;padding:15px 0;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .18s}
+.gen-btn:disabled{background:#3D3580;cursor:not-allowed}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.result-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.empty{padding:40px 20px;text-align:center;color:#3A3A55;font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:8px;display:block}
+.error{background:var(--err-bg);border:1px solid var(--err-border);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--err);line-height:1.5;display:none}
+.error.show{display:block}
+.status-box{padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--muted);display:none;align-items:center;gap:8px}
+.status-box.show{display:flex}
+.dl-btn{display:block;width:100%;padding:11px 0;background:var(--surface2);border:none;color:var(--accent-light);font-size:13px;font-weight:600;cursor:pointer;text-align:center;text-decoration:none}
+.copy-btn{width:100%;padding:11px 0;background:transparent;border:none;border-top:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer;text-align:center}
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:none}
+.prog-wrap.show{display:block}
+.prog-track{background:var(--border);border-radius:99px;height:4px;overflow:hidden;margin-top:8px}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .8s}
+.hist-title{font-size:11px;font-weight:600;letter-spacing:.8px;color:#3A3A55;text-transform:uppercase;margin-bottom:10px}
+.hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hist-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent;transition:border-color .15s}
+.hist-grid img:hover{border-color:var(--accent)}
+.vid-list{display:flex;flex-direction:column;gap:8px}
+.vid-item{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="dot"></div>
+  <span class="logo">GenIA Studio</span>
+  <span class="badge">Replicate</span>
+</header>
+
+<div class="api-bar">
+  <div id="api-dot"></div>
+  <input id="api-input" type="password" placeholder="Pega tu API token de Replicate aquí..." autocomplete="off">
+  <button class="api-toggle" id="api-toggle">ver</button>
+</div>
+
+<div class="notice" id="notice">
+  🔑 <strong>Cómo obtener tu token:</strong> Ve a <a href="https://replicate.com" target="_blank">replicate.com</a> → Sign up → Account Settings → API Tokens → Create token
+</div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-img">🖼 Imagen</button>
+  <button class="tab" id="tab-vid">🎬 Video</button>
+</div>
+
+<div class="body">
+
+  <!-- IMAGE -->
+  <div class="panel active" id="panel-img">
+    <div>
+      <span class="lbl">Modelo</span>
+      <select id="img-model">
+        <option value="black-forest-labs/flux-schnell">Flux Schnell (rápido · gratis)</option>
+        <option value="black-forest-labs/flux-dev">Flux Dev (alta calidad)</option>
+        <option value="stability-ai/sdxl">Stable Diffusion XL</option>
+      </select>
+    </div>
+    <div>
+      <span class="lbl">Prompt</span>
+      <textarea id="img-prompt" rows="4" placeholder="Describe la imagen que quieres generar..."></textarea>
+    </div>
+    <div class="row">
+      <div class="half">
+        <span class="lbl">Proporción</span>
+        <select id="img-ratio">
+          <option value="1:1">Cuadrado 1:1</option>
+          <option value="9:16">Vertical 9:16</option>
+          <option value="16:9">Horizontal 16:9</option>
+          <option value="4:3">Estándar 4:3</option>
+        </select>
+      </div>
+      <div class="half">
+        <span class="lbl">Negativo</span>
+        <textarea id="img-neg" rows="2" style="min-height:46px;font-size:12px" placeholder="Ej: blurry, text..."></textarea>
+      </div>
+    </div>
+    <div class="error" id="img-error"></div>
+    <div class="status-box" id="img-status"><div class="spinner"></div><span id="img-status-text"></span></div>
+    <button class="gen-btn" id="img-btn">✦ Generar imagen</button>
+    <div class="result-box" id="img-result">
+      <div class="empty"><span class="empty-icon">🖼</span>Tu imagen aparecerá aquí</div>
+    </div>
+    <div id="img-hist-wrap" style="display:none">
+      <div class="hist-title">Historial</div>
+      <div class="hist-grid" id="img-hist"></div>
+    </div>
+  </div>
+
+  <!-- VIDEO -->
+  <div class="panel" id="panel-vid">
+    <div>
+      <span class="lbl">Modelo</span>
+      <select id="vid-model">
+        <option value="minimax/video-01">MiniMax Video (recomendado)</option>
+        <option value="luma/ray-flash-2-540p">Luma Ray Flash 2</option>
+        <option value="wavespeedai/ltx-video-0.9.7">LTX Video 0.9.7</option>
+      </select>
+    </div>
+    <div>
+      <span class="lbl">Prompt</span>
+      <textarea id="vid-prompt" rows="5" placeholder="Describe el video: acción, ambiente, movimiento de cámara..."></textarea>
+    </div>
+    <div>
+      <span class="lbl">Duración</span>
+      <div class="dur-row">
+        <button class="dur-btn active" id="dur-5">5 seg</button>
+        <button class="dur-btn" id="dur-10">10 seg</button>
+      </div>
+    </div>
+    <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6">
+      💡 <strong style="color:var(--accent-light)">Tip:</strong> El video tarda 1–5 min. Mantén esta página abierta.
+    </div>
+    <div class="prog-wrap" id="vid-prog">
+      <span id="vid-status-text" style="font-size:12px;color:var(--muted)">Procesando...</span>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <div class="error" id="vid-error"></div>
+    <button class="gen-btn" id="vid-btn">✦ Generar video</button>
+    <div class="result-box" id="vid-result">
+      <div class="empty"><span class="empty-icon">🎬</span>Tu video aparecerá aquí</div>
+    </div>
+    <div id="vid-hist-wrap" style="display:none">
+      <div class="hist-title">Videos generados</div>
+      <div class="vid-list" id="vid-hist"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let dur = "5";
+let imgHistory = [];
+let vidHistory = [];
+let progInterval = null;
+
+// ── API Key ────────────────────────────────────────────────────────────────
+const apiInput = document.getElementById("api-input");
+const apiDot   = document.getElementById("api-dot");
+const notice   = document.getElementById("notice");
+
+apiInput.addEventListener("input", () => {
+  const ok = apiInput.value.trim().length > 10;
+  apiDot.classList.toggle("on", ok);
+  notice.style.display = ok ? "none" : "block";
+});
+document.getElementById("api-toggle").addEventListener("click", function() {
+  const isPass = apiInput.type === "password";
+  apiInput.type = isPass ? "text" : "password";
+  this.textContent = isPass ? "ocultar" : "ver";
+});
+
+// ── Tabs ───────────────────────────────────────────────────────────────────
+document.getElementById("tab-img").addEventListener("click", () => switchTab("img"));
+document.getElementById("tab-vid").addEventListener("click", () => switchTab("vid"));
+function switchTab(t) {
+  ["img","vid"].forEach(x => {
+    document.getElementById("tab-"+x).classList.toggle("active", x===t);
+    document.getElementById("panel-"+x).classList.toggle("active", x===t);
+  });
+}
+
+// ── Duration ───────────────────────────────────────────────────────────────
+document.getElementById("dur-5").addEventListener("click", () => setDur("5"));
+document.getElementById("dur-10").addEventListener("click", () => setDur("10"));
+function setDur(d) {
+  dur = d;
+  document.getElementById("dur-5").classList.toggle("active", d==="5");
+  document.getElementById("dur-10").classList.toggle("active", d==="10");
+}
+
+// ── Replicate API ──────────────────────────────────────────────────────────
+async function callReplicate(modelId, input, onStatus) {
+  // Strip any non-ASCII / non-ISO-8859-1 chars (copy-paste artifacts)
+  const apiKey = apiInput.value.trim().replace(/[^ -~]/g, "");
+
+  onStatus("Enviando solicitud...");
+  const submitRes = await fetch(`https://api.replicate.com/v1/models/${modelId}/predictions`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Prefer": "wait=5",
+    },
+    body: JSON.stringify({ input }),
+  });
+
+  if (!submitRes.ok) {
+    const e = await submitRes.json().catch(() => ({}));
+    if (submitRes.status === 401) throw new Error("Token inválido. Verifica tu API token de Replicate.");
+    if (submitRes.status === 402) throw new Error("Sin créditos. Agrega un método de pago en Replicate.");
+    throw new Error(e.detail || e.error || `Error ${submitRes.status}`);
+  }
+
+  let pred = await submitRes.json();
+  if (pred.status === "succeeded") return extractUrl(pred.output);
+  if (pred.status === "failed")    throw new Error(pred.error || "Generación fallida.");
+
+  // Poll
+  const pollUrl = pred.urls?.get || `https://api.replicate.com/v1/predictions/${pred.id}`;
+  for (let i = 0; i < 120; i++) {
+    await sleep(3000);
+    onStatus(`Generando... (${(i+1)*3}s)`);
+    const r = await fetch(pollUrl, { headers: { "Authorization": `Bearer ${apiKey}` } });
+    if (!r.ok) continue;
+    pred = await r.json();
+    if (pred.status === "succeeded") return extractUrl(pred.output);
+    if (pred.status === "failed")    throw new Error(pred.error || "Generación fallida.");
+  }
+  throw new Error("Tiempo agotado (6 min). Intenta de nuevo.");
+}
+
+function extractUrl(output) {
+  if (!output) throw new Error("Sin resultado.");
+  if (typeof output === "string") return output;
+  if (Array.isArray(output))      return output[0];
+  if (output.url)                 return output.url;
+  if (output.video)               return output.video;
+  throw new Error("No se encontró URL en la respuesta.");
+}
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function showErr(id, msg)  { const e=document.getElementById(id); e.textContent=msg; e.classList.add("show"); }
+function hideErr(id)        { document.getElementById(id).classList.remove("show"); }
+function setLoading(btnId, loading, label) {
+  const btn = document.getElementById(btnId);
+  btn.disabled = loading;
+  const def = btnId==="img-btn" ? "✦ Generar imagen" : "✦ Generar video";
+  btn.innerHTML = loading ? `<div class="spinner"></div> ${label}` : def;
+}
+
+// ── Image ──────────────────────────────────────────────────────────────────
+document.getElementById("img-btn").addEventListener("click", async () => {
+  if (!apiInput.value.trim()) { showErr("img-error","Pega tu API token arriba."); return; }
+  const prompt = document.getElementById("img-prompt").value.trim();
+  if (!prompt) { showErr("img-error","Escribe un prompt."); return; }
+  hideErr("img-error");
+  setLoading("img-btn", true, "Generando...");
+  const statusBox = document.getElementById("img-status");
+  const statusTxt = document.getElementById("img-status-text");
+  statusBox.classList.add("show");
+
+  try {
+    const model = document.getElementById("img-model").value;
+    const ratio = document.getElementById("img-ratio").value;
+    const neg   = document.getElementById("img-neg").value.trim();
+    const input = { prompt, aspect_ratio: ratio, num_outputs:1, output_format:"webp" };
+    if (neg) input.negative_prompt = neg;
+
+    const url = await callReplicate(model, input, t => { statusTxt.textContent = t; });
+
+    document.getElementById("img-result").innerHTML =
+      `<img src="${url}" alt="resultado" style="width:100%;display:block">
+       <a href="${url}" target="_blank" class="dl-btn">↓ Abrir / descargar</a>`;
+
+    imgHistory.unshift({ url, prompt });
+    if (imgHistory.length > 9) imgHistory.pop();
+    renderImgHistory();
+  } catch(e) { showErr("img-error", e.message); }
+
+  setLoading("img-btn", false);
+  statusBox.classList.remove("show");
+});
+
+function renderImgHistory() {
+  const wrap = document.getElementById("img-hist-wrap");
+  const grid = document.getElementById("img-hist");
+  if (!imgHistory.length) { wrap.style.display="none"; return; }
+  wrap.style.display = "block";
+  grid.innerHTML = imgHistory.map((it,i) =>
+    `<img src="${it.url}" title="${it.prompt.substring(0,60)}" data-i="${i}">`
+  ).join("");
+  grid.querySelectorAll("img").forEach(img => img.addEventListener("click", () => {
+    const it = imgHistory[+img.dataset.i];
+    document.getElementById("img-result").innerHTML =
+      `<img src="${it.url}" style="width:100%;display:block">
+       <a href="${it.url}" target="_blank" class="dl-btn">↓ Abrir / descargar</a>`;
+  }));
+}
+
+// ── Video ──────────────────────────────────────────────────────────────────
+document.getElementById("vid-btn").addEventListener("click", async () => {
+  if (!apiInput.value.trim()) { showErr("vid-error","Pega tu API token arriba."); return; }
+  const prompt = document.getElementById("vid-prompt").value.trim();
+  if (!prompt) { showErr("vid-error","Escribe un prompt."); return; }
+  hideErr("vid-error");
+  setLoading("vid-btn", true, "Generando video...");
+
+  const progWrap = document.getElementById("vid-prog");
+  const progFill = document.getElementById("prog-fill");
+  const statusTxt = document.getElementById("vid-status-text");
+  progWrap.classList.add("show");
+  let pct = 0;
+  progInterval = setInterval(() => {
+    pct = Math.min(pct + 0.8, 90);
+    progFill.style.width = pct + "%";
+  }, 2000);
+
+  try {
+    const model = document.getElementById("vid-model").value;
+    const url = await callReplicate(
+      model,
+      { prompt, duration: parseInt(dur) },
+      t => { statusTxt.textContent = t; }
+    );
+
+    clearInterval(progInterval); progFill.style.width = "100%";
+    setTimeout(() => progWrap.classList.remove("show"), 800);
+
+    document.getElementById("vid-result").innerHTML =
+      `<video controls playsinline preload="auto" style="width:100%;display:block;background:#000">
+         <source src="${url}" type="video/mp4">
+         <source src="${url}" type="video/webm">
+       </video>
+       <a href="${url}" target="_blank" class="dl-btn">🔗 Abrir video en nueva pestaña</a>
+       <button class="copy-btn" onclick="navigator.clipboard.writeText('${url}').then(()=>alert('URL copiada!')).catch(()=>prompt('Copia esta URL:','${url}'))">📋 Copiar URL</button>`;
+
+    vidHistory.unshift({ url, prompt });
+    if (vidHistory.length > 5) vidHistory.pop();
+    renderVidHistory();
+  } catch(e) {
+    clearInterval(progInterval);
+    progWrap.classList.remove("show");
+    showErr("vid-error", e.message);
+  }
+
+  setLoading("vid-btn", false);
+});
+
+function renderVidHistory() {
+  const wrap = document.getElementById("vid-hist-wrap");
+  const list = document.getElementById("vid-hist");
+  if (!vidHistory.length) { wrap.style.display="none"; return; }
+  wrap.style.display = "block";
+  list.innerHTML = vidHistory.map((it,i) =>
+    `<div class="vid-item" data-i="${i}">
+       <span style="font-size:18px">🎬</span>
+       <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.prompt.substring(0,50)}</span>
+     </div>`
+  ).join("");
+  list.querySelectorAll(".vid-item").forEach(el => el.addEventListener("click", () => {
+    const it = vidHistory[+el.dataset.i];
+    document.getElementById("vid-result").innerHTML =
+      `<video controls playsinline preload="auto" style="width:100%;display:block;background:#000">
+         <source src="${it.url}" type="video/mp4">
+       </video>
+       <a href="${it.url}" target="_blank" class="dl-btn">🔗 Abrir video</a>`;
+  }));
+}
+</script>
+</body>
+</html>
