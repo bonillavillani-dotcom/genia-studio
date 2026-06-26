@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GenIA Studio</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0A0A0F;--surface:#16161F;--surface2:#1E1E2E;--border:#2A2A3E;
+  --accent:#6C5CE7;--accent-dim:#2D1F6E;--accent-light:#A29BFE;
+  --text:#E8E8F0;--muted:#636380;--success:#00B894;
+  --err:#FF7675;--err-bg:#2D1A1A;--err-border:#5C2A2A;
+}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;max-width:480px;margin:0 auto;padding-bottom:50px;min-height:100vh}
+header{padding:20px 20px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 12px var(--accent);flex-shrink:0}
+.logo{font-size:19px;font-weight:700;letter-spacing:-.4px}
+.badge{margin-left:auto;font-size:10px;color:var(--muted);background:var(--surface);padding:3px 8px;border-radius:99px;border:1px solid var(--border)}
+.section{padding:14px 20px;display:flex;flex-direction:column;gap:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px}
+.card-title{font-size:12px;font-weight:700;color:var(--accent-light);letter-spacing:.5px}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.6}
+.card-desc a{color:#D4D490;font-weight:600}
+.card-desc b{color:var(--text)}
+input[type=text],input[type=password]{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--accent-light);padding:10px 12px;font-size:12px;font-family:monospace;outline:none}
+input:focus{border-color:var(--accent)}
+.save-btn{padding:9px 16px;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block;margin-right:6px;transition:all .3s}
+.status-dot.on{background:var(--success);box-shadow:0 0 6px var(--success)}.tabs{display:flex;margin:0 20px;background:var(--surface);border-radius:10px;padding:4px;gap:4px}
+.tab{flex:1;padding:9px 0;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:var(--muted);transition:all .18s}
+.tab.active{background:var(--accent);color:#fff}
+.body{padding:14px 20px;display:flex;flex-direction:column;gap:14px}
+.panel{display:none;flex-direction:column;gap:14px}
+.panel.active{display:flex}
+.lbl{font-size:11px;font-weight:600;letter-spacing:.8px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:6px}
+select,textarea{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:11px 14px;font-size:14px;outline:none;font-family:inherit;transition:border-color .15s}
+select{appearance:none;cursor:pointer}
+textarea{font-family:monospace;font-size:13px;line-height:1.6;resize:vertical}
+select:focus,textarea:focus{border-color:var(--accent)}
+.row{display:flex;gap:10px}
+.half{flex:1;min-width:0}
+.dur-row{display:flex;gap:8px}
+.dur-btn{flex:1;padding:10px 0;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--muted);cursor:pointer;font-size:14px;font-weight:600;transition:all .15s}
+.dur-btn.active{border-color:var(--accent);background:var(--accent-dim);color:var(--accent-light)}
+.gen-btn{width:100%;padding:15px 0;background:var(--accent);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px}
+.gen-btn:disabled{background:#3D3580;cursor:not-allowed}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+.result-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.empty{padding:40px 20px;text-align:center;color:#3A3A55;font-size:13px}
+.empty-icon{font-size:32px;margin-bottom:8px;display:block}
+.error{background:var(--err-bg);border:1px solid var(--err-border);border-radius:10px;padding:12px 14px;font-size:13px;color:var(--err);line-height:1.5;display:none}
+.error.show{display:block}
+.status-bar{padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--muted);display:none;align-items:center;gap:8px}
+.status-bar.show{display:flex}
+.dl-btn{display:block;width:100%;padding:11px 0;background:var(--surface2);color:var(--accent-light);font-size:13px;font-weight:600;text-align:center;text-decoration:none;border:none;cursor:pointer}
+.copy-btn{width:100%;padding:10px 0;background:transparent;border:none;border-top:1px solid var(--border);color:var(--muted);font-size:12px;cursor:pointer}
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;display:none}
+.prog-wrap.show{display:block}
+.prog-label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.prog-track{background:var(--border);border-radius:99px;height:4px;overflow:hidden}
+.prog-fill{height:100%;background:var(--accent);border-radius:99px;width:0%;transition:width .8s}
+.hist-title{font-size:11px;font-weight:600;letter-spacing:.8px;color:#3A3A55;text-transform:uppercase;margin-bottom:10px}
+.hist-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hist-grid img{width:100%;aspect-ratio:1;object-fit:cover;border-radius:8px;cursor:pointer;border:2px solid transparent}
+.vid-list{display:flex;flex-direction:column;gap:8px}
+.vid-item{padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:10px}
+.divider{height:1px;background:var(--border);margin:4px 0}
+</style>
+</head>
+<body><header>
+  <div class="dot"></div>
+  <span class="logo">GenIA Studio</span>
+  <span class="badge">fal.ai + CF Worker</span>
+</header>
+
+<div class="section">
+  <div class="card">
+    <div class="card-title">⚙️ Worker URL</div>
+    <div class="card-desc">URL de tu Cloudflare Worker (ej: <b>https://genia.TU-USUARIO.workers.dev</b>)</div>
+    <div style="display:flex;gap:8px">
+      <input type="text" id="worker-url" placeholder="https://genia.tu-usuario.workers.dev">
+      <button class="save-btn" id="worker-save">Guardar</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted)"><span class="status-dot" id="worker-dot"></span><span id="worker-status">Sin configurar</span></div>
+  </div>
+  <div class="card">
+    <div class="card-title">🔑 API Key de fal.ai</div>
+    <div class="card-desc">Ve a <a href="https://fal.ai" target="_blank">fal.ai</a> → Dashboard → API Keys → Create</div>
+    <div style="display:flex;gap:8px">
+      <input type="password" id="fal-key" placeholder="tu-api-key-de-fal.ai">
+      <button class="save-btn" id="key-save">Guardar</button>
+    </div>
+    <div style="font-size:11px;color:var(--muted)"><span class="status-dot" id="key-dot"></span><span id="key-status">Sin configurar</span></div>
+  </div>
+</div>
+
+<div class="divider" style="margin:0 20px"></div>
+<div style="height:14px"></div>
+
+<div class="tabs">
+  <button class="tab active" id="tab-img">🖼 Imagen</button>
+  <button class="tab" id="tab-vid">🎬 Video</button>
+</div>
+
+<div class="body">
+  <div class="panel active" id="panel-img">
+    <div>
+      <span class="lbl">Modelo</span>
+      <select id="img-model">
+        <option value="fal-ai/flux/schnell">FLUX Schnell (rápido · gratis)</option>
+        <option value="fal-ai/flux/dev">FLUX Dev (alta calidad)</option>
+        <option value="fal-ai/flux-pro">FLUX Pro (máxima calidad)</option>
+        <option value="fal-ai/stable-diffusion-v3-medium">Stable Diffusion 3</option>
+      </select>
+    </div>
+    <div>
+      <span class="lbl">Prompt</span>
+      <textarea id="img-prompt" rows="4" placeholder="Describe la imagen que quieres generar..."></textarea>
+    </div>
+    <div class="row">
+      <div class="half">
+        <span class="lbl">Tamaño</span>
+        <select id="img-size">
+          <option value="square_hd">Cuadrado HD</option>
+          <option value="portrait_16_9">Vertical 16:9</option>
+          <option value="landscape_16_9">Horizontal 16:9</option>
+          <option value="portrait_4_3">Vertical 4:3</option>
+        </select>
+      </div>
+      <div class="half">
+        <span class="lbl">Negativo</span>
+        <textarea id="img-neg" rows="2" style="min-height:44px;font-size:12px" placeholder="blurry, text..."></textarea>
+      </div>
+    </div>
+    <div class="error" id="img-error"></div>
+    <div class="status-bar" id="img-status"><div class="spinner"></div><span id="img-status-txt"></span></div>
+    <button class="gen-btn" id="img-btn">✦ Generar imagen</button>
+    <div class="result-box" id="img-result">
+      <div class="empty"><span class="empty-icon">🖼</span>Tu imagen aparecerá aquí</div>
+    </div>
+    <div id="img-hist-wrap" style="display:none">
+      <div class="hist-title">Historial</div>
+      <div class="hist-grid" id="img-hist"></div>
+    </div>
+  </div><div class="panel" id="panel-vid">
+    <div>
+      <span class="lbl">Modelo</span>
+      <select id="vid-model">
+        <option value="fal-ai/ltx-video">LTX Video (rápido)</option>
+        <option value="fal-ai/kling-video/v1.6/standard/text-to-video">Kling 1.6 Standard</option>
+        <option value="fal-ai/kling-video/v1.6/pro/text-to-video">Kling 1.6 Pro</option>
+        <option value="fal-ai/wan-t2v-v1.3">Wan T2V 1.3</option>
+      </select>
+    </div>
+    <div>
+      <span class="lbl">Prompt</span>
+      <textarea id="vid-prompt" rows="5" placeholder="Describe el video: acción, ambiente, movimiento de cámara..."></textarea>
+    </div>
+    <div>
+      <span class="lbl">Duración</span>
+      <div class="dur-row">
+        <button class="dur-btn active" id="dur-5">5 seg</button>
+        <button class="dur-btn" id="dur-10">10 seg</button>
+      </div>
+    </div>
+    <div style="padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;font-size:12px;color:var(--muted);line-height:1.6">
+      💡 <strong style="color:var(--accent-light)">Tip:</strong> El video tarda 1-5 min. Mantén esta página abierta.
+    </div>
+    <div class="prog-wrap" id="vid-prog">
+      <div class="prog-label" id="vid-prog-label">Procesando...</div>
+      <div class="prog-track"><div class="prog-fill" id="prog-fill"></div></div>
+    </div>
+    <div class="error" id="vid-error"></div>
+    <button class="gen-btn" id="vid-btn">✦ Generar video</button>
+    <div class="result-box" id="vid-result">
+      <div class="empty"><span class="empty-icon">🎬</span>Tu video aparecerá aquí</div>
+    </div>
+    <div id="vid-hist-wrap" style="display:none">
+      <div class="hist-title">Videos generados</div>
+      <div class="vid-list" id="vid-hist"></div>
+    </div>
+  </div>
+</div><script>
+const $ = id => document.getElementById(id);
+function sleep(ms){ return new Promise(r=>setTimeout(r,ms)); }
+function showErr(id,msg){ const e=$(id); e.textContent=msg; e.classList.add("show"); }
+function hideErr(id){ $(id).classList.remove("show"); }
+function setBtn(id,loading,label){
+  const b=$(id); b.disabled=loading;
+  const def=id==="img-btn"?"✦ Generar imagen":"✦ Generar video";
+  b.innerHTML=loading?`<div class="spinner"></div> ${label}`:def;
+}
+function clean(s){ return s.replace(/[^\x20-\x7E]/g,"").trim(); }
+
+let WORKER_URL = localStorage.getItem("genia_worker")||"";
+let FAL_KEY = localStorage.getItem("genia_falkey")||"";
+
+function applyConfig(){
+  if(WORKER_URL){ $("worker-url").value=WORKER_URL; setWorkerStatus(true); }
+  if(FAL_KEY){ $("fal-key").value="•".repeat(20); setKeyStatus(true); }
+}
+function setWorkerStatus(ok){
+  $("worker-dot").classList.toggle("on",ok);
+  $("worker-status").textContent=ok?"Worker configurado ✓":"Sin configurar";
+}
+function setKeyStatus(ok){
+  $("key-dot").classList.toggle("on",ok);
+  $("key-status").textContent=ok?"API key guardada ✓":"Sin configurar";
+}
+$("worker-save").addEventListener("click",()=>{
+  const v=clean($("worker-url").value);
+  if(!v.startsWith("http")){ alert("URL inválida"); return; }
+  WORKER_URL=v.replace(/\/$/,"");
+  localStorage.setItem("genia_worker",WORKER_URL);
+  setWorkerStatus(true);
+});
+$("key-save").addEventListener("click",()=>{
+  const v=clean($("fal-key").value);
+  if(v.length<10 || v.includes("•")){ alert("Pega una API key válida"); return; }
+  FAL_KEY=v;
+  localStorage.setItem("genia_falkey",FAL_KEY);
+  $("fal-key").value="•".repeat(20);
+  setKeyStatus(true);
+});
+applyConfig();
+
+$("tab-img").addEventListener("click",()=>switchTab("img"));
+$("tab-vid").addEventListener("click",()=>switchTab("vid"));
+function switchTab(t){
+  ["img","vid"].forEach(x=>{
+    $("tab-"+x).classList.toggle("active",x===t);
+    $("panel-"+x).classList.toggle("active",x===t);
+  });
+}
+
+let dur="5";
+$("dur-5").addEventListener("click",()=>{ dur="5"; $("dur-5").classList.add("active"); $("dur-10").classList.remove("active"); });
+$("dur-10").addEventListener("click",()=>{ dur="10"; $("dur-10").classList.add("active"); $("dur-5").classList.remove("active"); });
+</script><script>
+async function callWorker(modelId, body, onStatus){
+  if(!WORKER_URL) throw new Error("Configura la URL de tu Cloudflare Worker arriba.");
+  if(!FAL_KEY) throw new Error("Configura tu API key de fal.ai arriba.");
+  onStatus("Enviando solicitud...");
+  const res = await fetch(`${WORKER_URL}/proxy/${modelId}`, {
+    method:"POST",
+    headers:{"Content-Type":"application/json","X-Fal-Key":FAL_KEY},
+    body: JSON.stringify(body),
+  });
+  if(!res.ok){ const txt=await res.text().catch(()=>""); throw new Error(`Error ${res.status}: ${txt.substring(0,120)}`); }
+  return await res.json();
+}
+function extractUrl(data){
+  if(!data) throw new Error("Sin resultado.");
+  if(data.images?.[0]?.url) return data.images[0].url;
+  if(data.video?.url) return data.video.url;
+  if(data.image?.url) return data.image.url;
+  if(typeof data.url==="string") return data.url;
+  throw new Error("No se encontró URL en la respuesta.");
+}
+let imgHistory=[];
+$("img-btn").addEventListener("click", async ()=>{
+  const prompt=$("img-prompt").value.trim();
+  if(!prompt){ showErr("img-error","Escribe un prompt."); return; }
+  hideErr("img-error");
+  setBtn("img-btn",true,"Generando imagen...");
+  $("img-status").classList.add("show");
+  try{
+    const model=$("img-model").value;
+    const size=$("img-size").value;
+    const neg=$("img-neg").value.trim();
+    const input={prompt,image_size:size,num_inference_steps:28,num_images:1};
+    if(neg) input.negative_prompt=neg;
+    const data=await callWorker(model,input,t=>{ $("img-status-txt").textContent=t; });
+    const url=extractUrl(data);
+    $("img-result").innerHTML=`<img src="${url}" alt="resultado" style="width:100%;display:block"><a href="${url}" target="_blank" class="dl-btn">↓ Abrir / descargar imagen</a>`;
+    imgHistory.unshift({url,prompt});
+    if(imgHistory.length>9) imgHistory.pop();
+    renderImgHist();
+  }catch(e){ showErr("img-error",e.message); }
+  setBtn("img-btn",false);
+  $("img-status").classList.remove("show");
+});
+function renderImgHist(){
+  const wrap=$("img-hist-wrap"),grid=$("img-hist");
+  if(!imgHistory.length){wrap.style.display="none";return;}
+  wrap.style.display="block";
+  grid.innerHTML=imgHistory.map((it,i)=>`<img src="${it.url}" data-i="${i}">`).join("");
+  grid.querySelectorAll("img").forEach(img=>img.addEventListener("click",()=>{
+    const it=imgHistory[+img.dataset.i];
+    $("img-result").innerHTML=`<img src="${it.url}" style="width:100%;display:block"><a href="${it.url}" target="_blank" class="dl-btn">↓ Abrir</a>`;
+  }));
+}
+let vidHistory=[],progInt=null;
+$("vid-btn").addEventListener("click", async ()=>{
+  const prompt=$("vid-prompt").value.trim();
+  if(!prompt){ showErr("vid-error","Escribe un prompt."); return; }
+  hideErr("vid-error");
+  setBtn("vid-btn",true,"Generando video...");
+  $("vid-prog").classList.add("show");
+  let pct=0;
+  progInt=setInterval(()=>{ pct=Math.min(pct+0.6,90); $("prog-fill").style.width=pct+"%"; },2000);
+  try{
+    const model=$("vid-model").value;
+    const data=await callWorker(model,{prompt,duration:parseInt(dur)},t=>{ $("vid-prog-label").textContent=t; });
+    const url=extractUrl(data);
+    clearInterval(progInt); $("prog-fill").style.width="100%";
+    setTimeout(()=>$("vid-prog").classList.remove("show"),800);
+    $("vid-result").innerHTML=`<video controls playsinline preload="auto" style="width:100%;display:block;background:#000"><source src="${url}" type="video/mp4"><source src="${url}" type="video/webm"></video><a href="${url}" target="_blank" class="dl-btn">🔗 Abrir video</a><button class="copy-btn" onclick="navigator.clipboard.writeText('${url}').then(()=>alert('URL copiada!')).catch(()=>prompt('URL:','${url}'))">📋 Copiar URL</button>`;
+    vidHistory.unshift({url,prompt});
+    if(vidHistory.length>5) vidHistory.pop();
+    renderVidHist();
+  }catch(e){
+    clearInterval(progInt);
+    $("vid-prog").classList.remove("show");
+    showErr("vid-error",e.message);
+  }
+  setBtn("vid-btn",false);
+});
+function renderVidHist(){
+  const wrap=$("vid-hist-wrap"),list=$("vid-hist");
+  if(!vidHistory.length){wrap.style.display="none";return;}
+  wrap.style.display="block";
+  list.innerHTML=vidHistory.map((it,i)=>`<div class="vid-item" data-i="${i}"><span style="font-size:18px">🎬</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${it.prompt.substring(0,50)}</span></div>`).join("");
+  list.querySelectorAll(".vid-item").forEach(el=>el.addEventListener("click",()=>{
+    const it=vidHistory[+el.dataset.i];
+    $("vid-result").innerHTML=`<video controls playsinline style="width:100%;display:block;background:#000"><source src="${it.url}" type="video/mp4"></video><a href="${it.url}" target="_blank" class="dl-btn">🔗 Abrir video</a>`;
+  }));
+}
+</script>
+</body>
+</html>
